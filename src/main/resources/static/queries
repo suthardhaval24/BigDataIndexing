@@ -1,0 +1,119 @@
+GET plan_index/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+GET plan_index/_search
+{
+"query": {
+  "bool": {
+    "should": [
+      {
+        "match": {
+          "planCostShares.copay": 23
+        }
+      },
+      {
+        "match":  {
+          "linkedPlanServices.linkedService.name": "Yearly physical"
+        }
+      }
+    ],
+    "minimum_should_match": 2
+  }
+},
+"from": 0,
+"size": 10
+}
+
+
+GET plan_index/_search
+{
+ "size": 0,
+ "aggs": {
+   "popular_services": {
+     "terms": {
+       "field": "linkedPlanServices.linkedService.objectId.keyword"
+     }
+   }
+ }
+}
+
+GET plan_index/_search
+{
+ "query": {
+   "range" : {
+     "planCostShares.copay": {
+       "gte": "175",
+       "lte": "233"
+     }
+   }
+ }}
+
+GET plan_index/_search
+{
+ "query": {
+   "match_all": {}
+ },
+ "sort": {
+   "linkedPlanServices.planserviceCostShares.deductible":"asc"
+ }
+}
+
+GET plan_index/_search
+{
+"query": {
+  "match_all": {}
+},
+"sort": [
+  {"planCostShares.deductible":{"order":"desc"}},
+  "planCostShares.copay"
+]
+}
+
+GET plan_index/_search
+{
+ "size": 0,
+ "aggs": {
+   "copay_stats": {
+     "stats": {
+       "field": "linkedPlanServices.planserviceCostShares.copay"
+     }
+   }
+ }
+}
+
+#nestedquery
+
+GET insurance_plan_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "nested": {
+          "path": "linkedPlanServices.planserviceCostShares",
+          "query":
+          {
+            "range": {
+            "linkedPlanServices.planserviceCostShares.copay": {
+                "gte": 0
+              }
+            }}
+        }},
+        {
+          "nested": {
+            "path": "linkedPlanServices.planserviceCostShares",
+            "query":
+            {
+              "range": {
+                "linkedPlanServices.planserviceCostShares.deductible": {
+                  "gte": 10
+                }
+              }}
+          }}
+      ]
+  }}
+}
